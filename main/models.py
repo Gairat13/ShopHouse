@@ -55,7 +55,6 @@ class Cart(models.Model):
         return f'{self.id}'
 
 
-
 class NoteBook(Product):
     diagonal = models.CharField(max_length=255, verbose_name='Диагональ')
     display_type = models.CharField(max_length=255, verbose_name='Тип дисплея')
