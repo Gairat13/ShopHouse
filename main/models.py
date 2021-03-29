@@ -4,9 +4,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 
-# Create your models here.
+from django.urls import reverse
 
 MyUser = get_user_model()
+
+
+def get_product_url(obj, view_name):
+    ct_model = obj.__class__._meta.model_name
+    return reverse(view_name, kwargs={'ct_model': ct_model, 'slug': obj.slug})
 
 
 class MinResolutionErrorException(Exception):
@@ -73,7 +78,7 @@ class Product(models.Model):
             raise MinResolutionErrorException('Разрешение изображения меньше минимального!')
         if img.height > self.MAX_RESOLUTION or self.MAX_RESOLUTION < img.width:
             raise MaxResolutionErrorException('Разрешение изображения больше допустимого!')
-        return image
+        super().save(*args, **kwargs)
 
 
 class CartProduct(models.Model):
@@ -94,6 +99,8 @@ class Cart(models.Model):
     products = models.ManyToManyField(CartProduct, blank=True, related_name='carts')
     total_products = models.PositiveIntegerField(default=0)
     final_price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Общая цена')
+    in_order = models.BooleanField(default=False)
+    for_anonymous_user = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.id}'
@@ -110,6 +117,9 @@ class NoteBook(Product):
     def __str__(self):
         return f'{self.category.name}: {self.title}'
 
+    def get_absolute_url(self):
+        return get_product_url(self, 'product_detail')
+
 
 class SmartPhone(Product):
     diagonal = models.CharField(max_length=255, verbose_name='Диагональ')
@@ -124,6 +134,9 @@ class SmartPhone(Product):
 
     def __str__(self):
         return f'{self.category.name}: {self.title}'
+
+    def get_absolute_url(self):
+        return get_product_url(self, 'product_detail')
 
 
 class Customer(models.Model):

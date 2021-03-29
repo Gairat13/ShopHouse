@@ -1,14 +1,12 @@
-from django import forms
-from PIL import Image
-
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField, ModelForm
 from django.utils.safestring import mark_safe
+
 from .models import *
 
 
-class NotebookAdminForm(ModelForm):
+class ProductAdminForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,7 +18,7 @@ class NotebookAdminForm(ModelForm):
     def clean_image(self):
         image = self.cleaned_data['image']
         img = Image.open(image)
-        if image.size >Product.MAX_IMAGE_SIZE:
+        if image.size > Product.MAX_IMAGE_SIZE:
             raise ValidationError('Размер изображения не должен превышать 3МБ! ')
         if img.height < Product.MIN_RESOLUTION or Product.MIN_RESOLUTION > img.width:
             raise ValidationError('Разрешение изображения меньше минимального!')
@@ -31,7 +29,7 @@ class NotebookAdminForm(ModelForm):
 
 class NotebookAdmin(admin.ModelAdmin):
 
-    form = NotebookAdminForm
+    form = ProductAdminForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'category':
@@ -40,6 +38,9 @@ class NotebookAdmin(admin.ModelAdmin):
 
 
 class SmartphoneAdmin(admin.ModelAdmin):
+
+    form = ProductAdminForm
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'category':
             return ModelChoiceField(Category.objects.filter(slug='smartphone'))
