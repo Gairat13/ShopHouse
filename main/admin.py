@@ -27,6 +27,22 @@ class ProductAdminForm(ModelForm):
         return image
 
 
+class SmartphoneAdminForm(ProductAdminForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        if not instance.sd:
+            self.fields['sd_volume_max'].widget.attrs.update({
+                'readonly': True, 'style':'background: lightgray'
+            })
+
+    def clean(self):
+        if self.cleaned_data['sd'] and not self.cleaned_data['sd_volume_max']:
+            self.cleaned_data['sd_volume_max'] = None
+            self.cleaned_data['sd'] = False
+        return self.cleaned_data
+
+
 class NotebookAdmin(admin.ModelAdmin):
 
     form = ProductAdminForm
@@ -39,7 +55,8 @@ class NotebookAdmin(admin.ModelAdmin):
 
 class SmartphoneAdmin(admin.ModelAdmin):
 
-    form = ProductAdminForm
+    change_form_template = 'admin.html'
+    form = SmartphoneAdminForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'category':
@@ -53,3 +70,5 @@ admin.site.register(SmartPhone, SmartphoneAdmin)
 admin.site.register(CartProduct)
 admin.site.register(Cart)
 admin.site.register(Customer)
+admin.site.register(Order)
+
